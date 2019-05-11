@@ -1,3 +1,20 @@
+<?php
+if (isset($_POST['register'])) {
+  include('modules/config.php');
+  //
+  $names = $_POST['names'];
+  $email = $_POST['email'];
+  $password = $_POST['password'];
+  $query = "INSERT INTO users(names, title, email, password, address, twitter, facebook, linkedin, about) VALUES ('$names', '', '$email', '$password', '','','','','')";
+  if ($conn->query($query)) {
+    header('Location: signup.php?success');
+    return;
+  } else {
+    header('Location: signup.php?error');
+    return;
+  }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -50,35 +67,44 @@
             <h3>
               Create Your account
             </h3>
-            <div class="post-header">
-              <p>Already have an account? <a href="register.php">Click here to login</a></p>
+            <div id="errormessage">
+              <?php if (isset($_GET['error'])) { ?>
+                <div class="post-header">
+                  <p>Something went wrong! Try again later</p>
+                </div>
+              <?php } ?>
+              <?php if (isset($_GET['success'])) { ?>
+                <div class="post-header">
+                  <p>Account created! <a href="login.php">Click here to login</a></p>
+                </div>
+              <?php } ?>
             </div>
-            <form class="login-form">
+            <form class="login-form" method="POST" onsubmit="return validateForm();">
               <div class="form-group">
                 <div class="input-icon">
                   <i class="lni-user"></i>
-                  <input type="text" class="form-control" name="name" placeholder="Username">
+                  <input type="text" class="form-control" name="names" placeholder="Names" required>
                 </div>
               </div>
               <div class="form-group">
                 <div class="input-icon">
                   <i class="lni-envelope"></i>
-                  <input type="text" class="form-control" name="email" placeholder="Email Address">
+                  <input type="email" class="form-control" name="email" placeholder="Email Address" required>
                 </div>
               </div>
               <div class="form-group">
                 <div class="input-icon">
                   <i class="lni-lock"></i>
-                  <input type="password" class="form-control" placeholder="Password">
+                  <input type="password" class="form-control" name="password" id="password" placeholder="Password" required>
                 </div>
               </div>
               <div class="form-group">
                 <div class="input-icon">
                   <i class="lni-unlock"></i>
-                  <input type="password" class="form-control" placeholder="Retype Password">
+                  <input type="password" class="form-control" id="confirmpassword" placeholder="Retype Password" required>
                 </div>
               </div>
-              <button class="btn btn-common log-btn mt-3">Register</button>
+              <button type="submit" name="register" class="btn btn-common log-btn mt-3">Register</button>
               <p class="text-center">Already have an account?<a href="login.php"> Sign In</a></p>
             </form>
           </div>
@@ -108,6 +134,20 @@
   <script src="assets/js/form-validator.min.js"></script>
   <script src="assets/js/contact-form-script.js"></script>
   <script src="assets/js/main.js"></script>
+  <script type="text/javascript">
+    function validateForm() {
+      var password = $("#password").val();
+      var confirmpassword = $("#confirmpassword").val();
+      if (password.length < 8) {
+        $("#errormessage").html('<div class="post-header"> <p> Password length should be more than 8 characters </p> </div>');
+        return false;
+      }
+      if (password != confirmpassword) {
+        $("#errormessage").html('<div class="post-header"> <p> Password mismatch </p> </div>');
+        return false;
+      }
+    }
+  </script>
 </body>
 
 </html>

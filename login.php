@@ -1,3 +1,34 @@
+<?php
+session_start();
+include("modules/config.php");
+$uname = '';
+$error = '';
+if (isset($_SESSION['logged_user_info'])) {
+  header("Location: manage-forms.php");
+}
+if (isset($_POST['login'])) {
+  // Define $username and $password
+  $username = $_POST['email'];
+  $uname = $_POST['email'];
+  $password = $_POST['password'];
+  // To protect MySQL injection for Security purpose
+  $username = stripslashes($username);
+  $password = stripslashes($password);
+
+  $query = $conn->query("SELECT id FROM users WHERE email = '$username' AND password = '$password' LIMIT 1");
+  $nums = $query->num_rows;
+  $arr = $query->fetch_array();
+  $userId = $arr['id'];
+
+  //
+  if ($nums == 0) {
+    header('Location: login.php?error');
+  } else {
+    $_SESSION['logged_user_info'] = $userId;
+    header("Location: manage-forms?_rdr"); // Redirecting To Other Page
+  }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -49,27 +80,29 @@
             <h3>
               Login
             </h3>
-            <div class="post-header">
-              <p>Already have an account? <a href="register.php">Click here to login</a></p>
-            </div>
-            <form class="login-form">
+            <?php if (isset($_GET['error'])) { ?>
+              <div class="post-header">
+                <p>Invalid email or password!</a></p>
+              </div>
+            <?php } ?>
+            <form class="login-form" method="POST">
               <div class="form-group">
                 <div class="input-icon">
                   <i class="lni-user"></i>
-                  <input type="text" id="sender-email" class="form-control" name="email" placeholder="Username">
+                  <input type="email" class="form-control" name="email" placeholder="Email">
                 </div>
               </div>
               <div class="form-group">
                 <div class="input-icon">
                   <i class="lni-lock"></i>
-                  <input type="password" class="form-control" placeholder="Password">
+                  <input type="password" class="form-control" name="password" placeholder="Password">
                 </div>
               </div>
               <div class="form-group form-check">
                 <input type="checkbox" class="form-check-input" id="exampleCheck1">
                 <label class="form-check-label" for="exampleCheck1">Keep Me Signed In</label>
               </div>
-              <button class="btn btn-common log-btn">Submit</button>
+              <button class="btn btn-common log-btn" name="login" type="submit">login</button>
             </form>
             <ul class="form-links">
               <li class="text-center"><a href="signup.php">Don't have an account?</a></li>
