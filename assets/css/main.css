@@ -4276,3 +4276,55 @@ footer .menu li .small-title {
   color: #333;
   font-weight: 400
 }
+
+.question_section .form-group {
+  margin: 0px !important;
+  float: left !important;
+  margin-top: 1em !important;
+}
+
+.col-md-3 span.btn {
+  padding: 0px;
+}
+
+.col-md-3 input {
+  border-radius: 6px;
+}
+
+.question_section {
+  float: left !important;
+}
+
+.btn-group-toggle .btn {
+  background: #f46524;
+}
+
+.btn-group-toggle .active {
+  background: #bd501e !important;
+}
+
+.btn-danger {
+  color: #db3545 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #404040 !important;
+  border-radius: 3px;
+}
+
+.btn-danger:hover {
+  color: #fff !important;
+  background-color: #db3545 !important;
+  border: 1px solid #db3545 !important;
+  border-radius: 3px;
+}
+
+.question_section {
+  margin-top: 15px;
+  padding-bottom: 15px;
+  -webkit-box-shadow: 2px -1px 29px 11px rgba(0, 0, 0, 0.11) !important;
+  -moz-box-shadow: 2px -1px 29px 11px rgba(0, 0, 0, 0.11) !important;
+  box-shadow: 2px -1px 29px 11px rgba(0, 0, 0, 0.11) !important;
+}
+
+.add-post-btn input {
+  border-radius: 5px !important;
+}

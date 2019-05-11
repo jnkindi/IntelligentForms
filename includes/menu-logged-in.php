@@ -14,7 +14,7 @@
             <div class="collapse navbar-collapse" id="main-navbar">
                 <ul class="navbar-nav mr-auto w-100 justify-content-end">
                     <li class="nav-item">
-                        <a class="nav-link" href="add-form.php">
+                        <a class="nav-link" href="add-form.php?form">
                             Add Form
                         </a>
                     </li>
