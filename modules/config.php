@@ -3,8 +3,8 @@
 date_default_timezone_set('Africa/Kigali');
 $server = "localhost";
 $user = "root";
-$pass = "root@123";
-$db = "intelligentforms";
+$pass = "iamgeek";
+$db = "intelligentform";
 
 $GLOBALS['server'] = $server;
 $GLOBALS['user'] = $user;

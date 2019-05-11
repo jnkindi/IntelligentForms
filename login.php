@@ -25,7 +25,7 @@ if (isset($_POST['login'])) {
     header('Location: login.php?error');
   } else {
     $_SESSION['logged_user_info'] = $userId;
-    header("Location: manage-forms?_rdr"); // Redirecting To Other Page
+    header("Location: manage-forms.php"); // Redirecting To Other Page
   }
 }
 ?>

@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css?family=Lora');
+:root{
+  --background-color:#f46737;
+  --white-color:#fff;
+}
+.survey-content{
+  width: 100%;
+}
+.survey-info{
+  width: 50%;
+  margin: auto;
+  font-family:"comfortaa",cursive;
+}
+.survey-input{
+  border-radius: 4px;
+  font-size: 12px;
+  height: 40px!important;
+}
+.survey-info label{
+  font-size: 10px;
+}
+.addBtn{
+  padding: 5px;
+  border:none;
+  border-radius: 2px;
+  font-size: 12px;
+  padding: 10px;
+  background-color: var(--background-color);
+  color: var(--white-color);
+}
