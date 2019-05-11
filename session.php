@@ -17,5 +17,5 @@ if (!isset($_SESSION['logged_user_info'])) {
 	}
 }
 if (!isset($user_check)) {
-	header('Location: ../index.php'); // Redirecting To Home Page
+	header('Location:index.php'); // Redirecting To Home Page
 }
