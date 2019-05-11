@@ -1,3 +1,4 @@
+<?php include('session.php'); ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -18,6 +19,7 @@
   <link rel="stylesheet" href="assets/css/animate.css">
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/responsive.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.0/tingle.min.css">
 </head>
 
 <body>
@@ -48,34 +50,33 @@
     <div class="container">
       <div class="row">
         <?php include('includes/leftbar.php'); ?>
+        <?php
+        $query = "SELECT * FROM users WHERE id = '$userId'";
+        $query = $conn->query($query);
+        $arr = $query->fetch_array();
+        ?>
         <div class="col-lg-8 col-md-8 col-xs-12">
           <div class="inner-box my-resume">
             <div class="author-resume">
-              <div class="thumb">
-                <img src="assets/img/resume/img-1.png" alt="">
-              </div>
-              <div class="author-info">
-                <h3>Mark Anderson</h3>
-                <p class="sub-title">Title</p>
-                <p class="sub-title"><span class="address"><i class="lni-map-marker"></i>Mahattan, NYC, USA</span></p>
-                <p><span><i class="ti-phone"></i>(+01) 211-123-5678</span></p>
+              <div class="author">
+                <h3><?php echo $arr['names']; ?> <sup><i class="lni-pencil" style="font-size: 25px; cursor: pointer" onclick="editProfile()"></i></sup>
+                </h3>
+                <p class="sub-title"><?php echo $arr['title']; ?></p>
+                <p><span></i><?php echo ($arr['email'] == '' ? '' : '<i class="ti-mail"></i> ' . $arr['email']); ?></span></p>
+                <p><span></i><?php echo ($arr['address'] == '' ? '' : '<i class="ti-address"></i> ' . $arr['address']); ?></span></p>
                 <div class="social-link">
-                  <a href="#" class="Twitter"><i class="lni-twitter-filled"></i></a>
-                  <a href="#" class="facebook"><i class="lni-facebook-filled"></i></a>
-                  <a href="#" class="google"><i class="lni-google-plus"></i></a>
-                  <a href="#" class="linkedin"><i class="lni-linkedin-fill"></i></a>
+                  <?php if ($arr['twitter'] != '') { ?><a href="<?php echo $arr['twitter']; ?>" class="Twitter"><i class="lni-twitter-filled"></i></a><?php } ?>
+                  <?php if ($arr['facebook'] != '') { ?><a href="<?php echo $arr['facebook']; ?>" class="Facebook"><i class="lni-facebook-filled"></i></a><?php } ?>
+                  <?php if ($arr['linkedin'] != '') { ?><a href="<?php echo $arr['linkedin']; ?>" class="Linkedin"><i class="lni-linkedin-fill"></i></a><?php } ?>
                 </div>
               </div>
             </div>
-            <div class="about-me item">
-              <h3>About Me</h3>
-              <p>Nullam semper erat arcu, ac tincidunt sem venenatis vel. Curabitur a dolor ac ligula fermentum eusmod
-                ac ullamcorper nulla. Integer blandit uitricies aliquam. Pellentesque quis dui varius, dapibus vilit id,
-                ipsum. Morbi ac eros feugiat, lacinia elit ut, elementum turpis. Curabitur justo sapien, tempus sit amet
-                ruturm eu, commodo eu lacus. Morbi in ligula nibh. Maecenas ut mi at odio hendririt eleif end tempor
-                vitae augue. Fusce eget arcu et nibh dapibus maximus consectetur in est. Sed iaculis Luctus nibh sed
-                veneatis. </p>
-            </div>
+            <?php if ($arr['about'] != '') { ?>
+              <div class="about-me item">
+                <h3>About</h3>
+                <p><?php echo $arr['about']; ?></p>
+              </div>
+            <?php } ?>
           </div>
         </div>
       </div>
@@ -108,6 +109,57 @@
   <script src="assets/js/form-validator.min.js"></script>
   <script src="assets/js/contact-form-script.js"></script>
   <script src="assets/js/main.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.0/tingle.min.js"></script>
+
+  <script>
+    function editProfile() {
+
+      // instanciate new modal
+      var modal = new tingle.modal({
+        footer: true,
+        stickyFooter: false,
+        closeMethods: ['overlay', 'escape'],
+        closeLabel: "Close",
+        cssClass: ['custom-class-1', 'custom-class-2'],
+        onOpen: function() {
+          console.log('modal open');
+        },
+        onClose: function() {
+          console.log('modal closed');
+        },
+        beforeClose: function() {
+          // here's goes some logic
+          // e.g. save content before closing the modal
+          return true; // close the modal
+          return false; // nothing happens
+        }
+      });
+
+      let htmlData = '<h1>Update profile</h1>';
+      htmlData += '<div class="row"><div class="col-md-12">';
+      htmlData += '<div class="col-md-4"><label>Names</label></div>';
+      htmlData += '</div></div> ';
+
+      // set content
+      modal.setContent(htmlData);
+
+      // add a button
+      modal.addFooterBtn('Update', 'tingle-btn tingle-btn--primary btn-sm', function() {
+        // here goes some logic
+        modal.close();
+      });
+
+      // add another button
+      modal.addFooterBtn('Exit', 'tingle-btn tingle-btn--danger btn-sm', function() {
+        // here goes some logic
+        modal.close();
+      });
+
+      // open modal
+      modal.open();
+
+    }
+  </script>
 </body>
 
 </html>
