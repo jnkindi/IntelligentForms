@@ -1,4 +1,25 @@
-<?php include('session.php'); ?>
+<?php
+include('session.php');
+if(isset($_POST["update"])){
+  $name=$_POST["name"];
+  $email=$_POST["email"];
+  $facebook=$_POST["facebook"];
+  $twitter=$_POST["twitter"];
+  $linkedin=$_POST["linkedin"];
+  $about=$_POST["about"];
+  $address=$_POST["address"];
+  // $userId=$_SESSION["logged_user_info"];
+  $title=$_POST["title"];
+  //update info
+  $sql="UPDATE users SET names='$name',email='$email',facebook='$facebook',
+  twitter='$twitter',linkedin='$linkedin',about='$about',address='$address',
+  title='$title' WHERE id='$userId'";
+  if($data=$conn->query($sql)){
+    header("Location:profile.php");
+  }
+
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -31,7 +52,6 @@
     <?php echo include('includes/menu-logged-in.php'); ?>
 
   </header>
-
 
   <div class="page-header">
     <div class="container">
@@ -113,7 +133,6 @@
 
   <script>
     function editProfile() {
-
       // instanciate new modal
       var modal = new tingle.modal({
         footer: true,
@@ -136,18 +155,34 @@
       });
 
       let htmlData = '<h1>Update profile</h1>';
-      htmlData += '<div class="row"><div class="col-md-12">';
-      htmlData += '<div class="col-md-4"><label>Names</label></div>';
-      htmlData += '</div></div> ';
+      htmlData += '<form action="profile.php" method="post"><div class="row">';
+      htmlData+='<div class="col-md-4"><div class="form-group"><label>title</label>';
+      htmlData+='<input type="text" class="form-control" name="title" value="<?php echo $arr['title']; ?>"></div></div>';
+      htmlData += '<div class="col-md-4"><div class="form-group"><label>Names</label>';
+      htmlData += '<input type="text" class="form-control" value="<?php echo  $arr['names']; ?>" class="names" name="name"></div></div>';
+      htmlData += '<div class="col-md-4"><div class="form-group"><label>Email</label>';
+      htmlData +='<input type="text" class="form-control" value="<?php echo  $arr['email']; ?>" name="email"></div></div> ';
+      htmlData += '<div class="col-md-4"><div class="form-group"><label>Address</label>';
+      htmlData +='<input type="text" class="form-control" value="<?php echo  $arr['address']; ?>" name="address"></div></div> ';
+      htmlData += '<div class="col-md-4"><div class="form-group"><label>twitter</label>';
+      htmlData +='<input type="text" class="form-control" name="twitter" value="<?php echo $arr['twitter'];?>"></div></div> ';
+      htmlData += '<div class="col-md-4"><div class="form-group"><label>facebook</label>';
+      htmlData +='<input type="text" class="form-control" name="facebook" value="<?php echo $arr['facebook']; ?>"></div></div> ';
+      htmlData += '<div class="col-md-4"><div class="form-group"><label>linkedin</label>';
+      htmlData +='<input type="text" class="form-control" name="linkedin" "<?php echo $arr['linkedin']; ?>"></div></div>';
+      htmlData+='<div class="col-md-12"><label>about</label>';
+      htmlData+='<textarea name="about" class="form-control"><?php echo $arr['about']; ?></textarea></div></div><br>';
+      htmlData+='<div class="form-group"><input type="submit" value="update" name="update" class="tingle-btn tingle-btn--primary btn-sm"></div></div>'
+      htmlData+='</form>';
 
       // set content
       modal.setContent(htmlData);
 
-      // add a button
-      modal.addFooterBtn('Update', 'tingle-btn tingle-btn--primary btn-sm', function() {
-        // here goes some logic
-        modal.close();
-      });
+      // // add a button
+      // modal.addFooterBtn('Update', 'tingle-btn tingle-btn--primary btn-sm', function() {
+      //   // here goes some logic
+      //   modal.close();
+      // });
 
       // add another button
       modal.addFooterBtn('Exit', 'tingle-btn tingle-btn--danger btn-sm', function() {
