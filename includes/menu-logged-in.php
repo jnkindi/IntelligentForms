@@ -14,23 +14,13 @@
             <div class="collapse navbar-collapse" id="main-navbar">
                 <ul class="navbar-nav mr-auto w-100 justify-content-end">
                     <li class="nav-item">
-                        <a class="nav-link" href="add-form.php?form">
+                        <a class="nav-link" href="add-form.php">
                             Add Form
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="form-replies.php">
-                            Form Replies
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="manage-forms.php">
                             Manage Forms
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="notifications.php">
-                            Notifications
                         </a>
                     </li>
                     <li class="nav-item">

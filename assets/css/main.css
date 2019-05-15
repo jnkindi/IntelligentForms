@@ -2654,7 +2654,7 @@ button:focus {
 }
 
 .manager-resumes-item .update-date {
-  padding: 5px 30px;
+  padding: 0px 30px;
   display: inline-block;
   width: 100%
 }
@@ -4327,4 +4327,15 @@ footer .menu li .small-title {
 
 .add-post-btn input {
   border-radius: 5px !important;
+}
+
+.form-table-result td,
+.form-table-result th {
+  padding: 0.25rem;
+  vertical-align: top;
+  border-top: 0.5px solid #dee2e6;
+}
+
+.form-table-result th {
+  font-weight: 500;
 }

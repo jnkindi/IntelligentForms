@@ -1,5 +1,7 @@
 <?php include('session.php'); ?>
 <?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 if (isset($_POST['submit'])) {
   $title = $_POST['title'];
   $type = $_POST['type'];
@@ -71,7 +73,100 @@ if (isset($_POST['submit'])) {
 </head>
 
 <body>
+  <style type="text/css">
+    .payment-btn {
+      float: right;
+      color: #f46524;
+    }
 
+    .pay-btn {
+      color: #f46524 !important;
+      border: none;
+      cursor: pointer;
+    }
+
+    .payment-popup {
+      position: absolute;
+      width: 100%;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      display: none;
+    }
+
+    .payment-forms {
+      width: 45%;
+      margin: auto;
+      border-radius: 4px;
+      background: #fff;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      z-index: 300;
+      margin-top: 200px;
+    }
+
+    .payment-title {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .payment-title div {
+      float: left;
+      padding: 20px;
+      font-size: 15px;
+      text-align: center;
+      margin-top: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .payment-title div button {
+      background: #f46524;
+      color: #fff;
+      border-radius: 20px;
+      border: none;
+      padding: 10px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .pay-titles {
+      text-align: center;
+      padding-top: 30px;
+      font-size: 18px;
+      color: #000;
+    }
+
+    .p-forms-momo {
+      padding: 20px;
+      padding-left: 70px;
+      padding-right: 70px;
+    }
+
+    .cards {
+      display: none;
+    }
+
+    .mobilemoney,
+    .visacard {
+      cursor: pointer;
+    }
+
+    .closeModel {
+      position: fixed;
+      font-size: 20px;
+      color: #fff;
+      z-index: 500;
+      right: 0;
+      margin: 20px;
+
+    }
+  </style>
   <header id="home" class="hero-area">
 
     <?php echo include('includes/menu-logged-in.php'); ?>
@@ -103,7 +198,7 @@ if (isset($_POST['submit'])) {
             <?php if (isset($_GET['success'])) { ?>
               <div class="row">
                 <div class="post-header col-md-4 offset-md-4">
-                  <p>Successfully created! <a href="#">Manage Form</a></p>
+                  <p>Successfully created! <a href="manage-forms">Manage Forms</a></p>
                 </div>
               </div>
             <?php } ?>
@@ -130,6 +225,11 @@ if (isset($_POST['submit'])) {
                 <div class="float-left">
                   <a href="javascript:void()" class="btn-added" onclick="add_question()"><i class="ti-plus"></i> Add Field</a>
                 </div>
+                <!--  -->
+                <div class="payment-btn" style="{float:right;}">
+                  <button type="button" class="btn-added pay-btn">include payment</button>
+                </div>
+                <!--  -->
               </div>
               <div class="col-md-12 question_section">
                 <div class="col-md-8 form-group">
@@ -154,6 +254,52 @@ if (isset($_POST['submit'])) {
   </div>
   </div>
   </div>
+  </div>
+  <!-- payment popup -->
+  <div class="payment-popup">
+    <div class="payment-forms">
+      <div class="closeModel">
+        <button>X</button>
+      </div>
+      <p class="pay-titles">Choose payment type</p>
+      <div class="payment-title">
+        <div><button type="button" class="mobilemoney">Mobile Money</button></div>
+        <div><button type="button" class="visacard">Visa Card</button></div>
+      </div>
+      <div class="p-forms-momo mobiles">
+        <form action="#" class="momoForm">
+          <div class="form-group">
+            <input type="text" name="amount" class="form-control" placeholder="amount">
+          </div>
+          <div class="form-group">
+            <input type="text" name="privateKey" class="form-control" placeholder="pin">
+          </div>
+          <div class="form-group">
+            <input type="text" name="phoneNumberPayer" class="form-control" placeholder="phone number">
+          </div>
+          <input type="submit" value="submit" class="btn btn-common">
+          <small class="momoMessage"></small>
+        </form>
+      </div>
+      <div class="p-forms-momo cards">
+        <form action="#" class="sendvisCard">
+          <strong>Visa Card Informations</strong>
+          <div class="form-group">
+            <input type="text" name="cardNumber" class="form-control" placeholder="card number">
+          </div>
+          <div class="form-group">
+            <input type="text" name="securityCode" class="form-control" placeholder="securityCode">
+          </div>
+          <div class="form-group">
+            <input type="date" name="expiresAt" class="form-control" placeholder="expired date">
+          </div>
+          <div class="form-group">
+            <input type="text" name="holderName" class="form-control" placeholder="holder name">
+          </div>
+          <input type="submit" value="submit" class="btn btn-common">
+        </form>
+      </div>
+    </div>
   </div>
   </section>
 
@@ -217,6 +363,86 @@ if (isset($_POST['submit'])) {
     function remove_question(i) {
       $("#question_section_" + i).remove();
     }
+    //paymant model
+    $(".pay-btn").on("click", function() {
+      $(".payment-popup").toggle();
+    })
+
+    //open visa card form
+    $(".visacard").on("click", function() {
+      $(".mobiles").css('display', 'none');
+      $(".cards").css('display', 'block');
+    });
+    //payment-popup
+    $(".mobilemoney").on("click", function() {
+      $(".cards").css('display', 'none');
+      $(".mobiles").css('display', 'block');
+    });
+
+    $(".sendvisCard").on("submit", function(e) {
+      e.preventDefault();
+      let info = $(".sendvisCard").serialize();
+      //@ajax
+      fetch("https://visa-payment.herokuapp.com/api/VISA/payment/50", {
+          method: "POST",
+          mode: "cors",
+          headers: {
+            "Accept": "application/json, text/plain, */*",
+            "Access-Control-Expose-Headers": "X-Custom-Header, Content-Length"
+          },
+          body: JSON.stringify(info)
+        })
+        .then((data) => {
+          console.log(data);
+        })
+        .catch((error) => {
+          console.log(error);
+        })
+      // $.ajax({
+      //   headers: {
+      //     "Accept": "application/json",
+      //     "co"
+      //   },
+      //   type: "POST",
+      //   url: "https://visa-payment.herokuapp.com/api/VISA/payment/50",
+      //   crossDomain: false,
+      //   dataType: "json",
+      //   data: info,
+      //   success: function(data) {
+      //     console.log(data);
+      //   },
+      //   error: function(error) {
+      //     // let errors = error.responseText.errors;
+      //     alert("Something wrong try again and make sure that all form are field.");
+      //   }
+      // })
+    });
+
+    $(".momoForm").on("submit", function(e) {
+      e.preventDefault();
+      let dat = $(".momoForm").serialize();
+      $.ajax({
+        type: "POST",
+        url: "https://iforms-mobile-api.herokuapp.com/api/pay",
+        dataType: "json",
+        data: {
+          phoneNumberPayer: 784675093,
+          amount: 45000,
+          phoneNumberReceiver: 788450976,
+          privateKey: 45365
+        },
+        success: function(data) {
+          $(".momoMessage").text("successfully saved.");
+        },
+        error: function(error) {
+          console.log(error);
+        }
+
+      })
+    })
+    $(".closeModel").on("click", function() {
+      $(".payment-popup").toggle();
+    })
   </script>
 </body>
 
