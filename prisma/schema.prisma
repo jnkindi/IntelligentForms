@@ -1,0 +1,259 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id              Int      @id @default(autoincrement())
+  name            String   @db.VarChar(255)
+  description     String?  @db.Text
+  tagline         String?  @db.VarChar(500)
+  contactEmail    String?  @map("contact_email") @db.VarChar(255)
+  contactPhone    String?  @map("contact_phone") @db.VarChar(50)
+  supportEmail    String?  @map("support_email") @db.VarChar(255)
+  website         String?  @db.VarChar(500)
+  address         String?  @db.Text
+  setupCompleted  Boolean  @default(false) @map("setup_completed")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  users User[]
+
+  @@map("organization")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  organizationId Int?     @map("organization_id")
+  names          String   @db.VarChar(255)
+  title          String?  @db.VarChar(255)
+  email          String   @unique @db.VarChar(255)
+  password       String   @db.VarChar(255) // Will store bcrypt hash
+  role           UserRole @default(USER)
+  address        String?  @db.Text
+  twitter        String?  @db.VarChar(255)
+  facebook       String?  @db.VarChar(255)
+  linkedin       String?  @db.VarChar(255)
+  about          String?  @db.Text
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  forms        Form[]
+  formAccess   FormAccess[]
+
+  @@index([organizationId])
+  @@index([role])
+  @@index([isActive])
+  @@map("users")
+}
+
+model Form {
+  id             Int      @id @default(autoincrement())
+  title          String   @db.VarChar(255)
+  type           FormType @default(FORM)
+  identifier     String   @unique @db.VarChar(255)
+  identifierhash String   @unique @db.VarChar(255)
+  userId         Int      @map("user_id")
+  status         Status   @default(ACTIVE)
+  description    String?  @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fields       FormField[]
+  replies      FormReplier[]
+  externalApis ExternalApi[]
+  formAccess   FormAccess[]
+
+  @@index([userId])
+  @@index([identifierhash])
+  @@index([status])
+  @@map("form")
+}
+
+model FormAccess {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  formId    Int?     @map("form_id") // NULL means access to all forms
+  access    AccessLevel @default(VIEW)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  form Form? @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, formId])
+  @@index([userId])
+  @@index([formId])
+  @@map("form_access")
+}
+
+model FormField {
+  id             Int         @id @default(autoincrement())
+  formId         Int         @map("form_id")
+  field          String      @db.VarChar(255) // Field label/title
+  answerType     AnswerType  @map("answer_type")
+  answerSubtype  String?     @map("answer_subtype") @db.VarChar(50) // text field, textbox, date, number, phone
+  status         Status      @default(ACTIVE)
+  required       Boolean     @default(false)
+  placeholder    String?     @db.VarChar(255)
+  order          Int         @default(0) // Field ordering
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  form            Form                  @relation(fields: [formId], references: [id], onDelete: Cascade)
+  expectedAnswers FormExpectedAnswer[]
+  replies         FormReply[]
+  externalFields  ExternalApiField[]
+
+  @@index([formId])
+  @@index([status])
+  @@map("form_field")
+}
+
+model FormExpectedAnswer {
+  id        Int      @id @default(autoincrement())
+  answer    String   @db.VarChar(255)
+  fieldId   Int      @map("field_id")
+  status    Status   @default(ACTIVE)
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  field FormField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@index([fieldId])
+  @@map("form_expected_answer")
+}
+
+model FormReplier {
+  id        Int      @id @default(autoincrement())
+  formId    Int      @map("form_id")
+  date      DateTime @default(now())
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  form           Form              @relation(fields: [formId], references: [id], onDelete: Cascade)
+  replies        FormReply[]
+  externalApiLogs ExternalApiLog[]
+
+  @@index([formId])
+  @@index([date])
+  @@map("form_replier")
+}
+
+model FormReply {
+  id        Int      @id @default(autoincrement())
+  replierId Int      @map("replier_id")
+  fieldId   Int      @map("field_id")
+  answer    String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  replier FormReplier @relation(fields: [replierId], references: [id], onDelete: Cascade)
+  field   FormField   @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@index([replierId])
+  @@index([fieldId])
+  @@map("form_replies")
+}
+
+model ExternalApi {
+  id        Int        @id @default(autoincrement())
+  formId    Int        @map("form_id")
+  url       String     @db.VarChar(500)
+  method    HttpMethod @default(POST)
+  headers   String?    @db.Text // JSON string of headers
+  enabled   Boolean    @default(true)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  form   Form               @relation(fields: [formId], references: [id], onDelete: Cascade)
+  fields ExternalApiField[]
+  logs   ExternalApiLog[]
+
+  @@index([formId])
+  @@map("external_api")
+}
+
+model ExternalApiField {
+  id                 Int      @id @default(autoincrement())
+  externalApiId      Int      @map("external_api")
+  fieldId            Int      @map("field_id")
+  externalFieldName  String   @map("externalfield_name") @db.VarChar(255)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  externalApi ExternalApi @relation(fields: [externalApiId], references: [id], onDelete: Cascade)
+  field       FormField   @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@index([externalApiId])
+  @@index([fieldId])
+  @@map("external_api_field")
+}
+
+model ExternalApiLog {
+  id              Int      @id @default(autoincrement())
+  externalApiId   Int      @map("external_api_id")
+  replierId       Int?     @map("replier_id")
+  requestPayload  String?  @map("request_payload") @db.Text
+  responseStatus  Int?     @map("response_status")
+  responseBody    String?  @map("response_body") @db.Text
+  errorMessage    String?  @map("error_message") @db.Text
+  executedAt      DateTime @default(now()) @map("executed_at")
+
+  externalApi ExternalApi  @relation(fields: [externalApiId], references: [id], onDelete: Cascade)
+  replier     FormReplier? @relation(fields: [replierId], references: [id], onDelete: SetNull)
+
+  @@index([externalApiId])
+  @@index([replierId])
+  @@index([executedAt])
+  @@map("external_api_log")
+}
+
+// Enums
+enum UserRole {
+  ADMIN      // Full system access, can manage users and organization
+  MANAGER    // Can create forms and manage assigned users
+  USER       // Can view and manage assigned forms
+}
+
+enum AccessLevel {
+  VIEW       // Can only view form and submissions
+  EDIT       // Can edit form and view submissions
+  FULL       // Can edit form, view submissions, and manage settings
+}
+
+enum FormType {
+  FORM
+  SURVEY
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum AnswerType {
+  TEXT
+  SINGLE_ANSWER
+  MULTIPLE_ANSWER
+}
+
+enum HttpMethod {
+  GET
+  POST
+  PUT
+  PATCH
+}
