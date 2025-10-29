@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
@@ -30,11 +31,23 @@ export default function FormActions({
   const [isUpdating, setIsUpdating] = useState(false);
   const [showEmbedModal, setShowEmbedModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -42,6 +55,29 @@ export default function FormActions({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const updatePosition = () => {
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom + window.scrollY + 8,
+          left: rect.right + window.scrollX - 224, // 224px = w-56
+        });
+      }
+    };
+
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+
+      return () => {
+        window.removeEventListener('scroll', updatePosition, true);
+        window.removeEventListener('resize', updatePosition);
+      };
+    }
+  }, [isOpen]);
 
   const handleToggleStatus = async () => {
     setIsOpen(false);
@@ -77,7 +113,7 @@ export default function FormActions({
 
   return (
     <>
-      <div className="relative" ref={dropdownRef}>
+      <div ref={buttonRef}>
         <Button
           variant="ghost"
           size="sm"
@@ -87,100 +123,108 @@ export default function FormActions({
         >
           <MoreVertical className="h-5 w-5" />
         </Button>
-
-        {isOpen && (
-          <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-            <Link
-              href={`/form-replies?id=${formId}`}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              onClick={() => setIsOpen(false)}
-            >
-              <FileText className="h-4 w-4 mr-3" />
-              View Submissions
-            </Link>
-
-            <a
-              href={`${appUrl}/f/${identifierhash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              onClick={() => setIsOpen(false)}
-            >
-              <ExternalLink className="h-4 w-4 mr-3" />
-              Open Form
-            </a>
-
-            <Link
-              href={`/api-logs?id=${formId}`}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              onClick={() => setIsOpen(false)}
-            >
-              <BarChart3 className="h-4 w-4 mr-3" />
-              API Logs
-            </Link>
-
-            <div className="border-t border-gray-200 my-1"></div>
-
-            <button
-              onClick={copyPublicUrl}
-              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-            >
-              <Copy className="h-4 w-4 mr-3" />
-              Copy Link
-            </button>
-
-            <button
-              onClick={() => {
-                setShowEmbedModal(true);
-                setIsOpen(false);
-              }}
-              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-            >
-              <Code className="h-4 w-4 mr-3" />
-              Embed Code
-            </button>
-
-            <Link
-              href={`/save-data-externally?id=${formId}`}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              onClick={() => setIsOpen(false)}
-            >
-              <Webhook className="h-4 w-4 mr-3" />
-              External API
-            </Link>
-
-            <div className="border-t border-gray-200 my-1"></div>
-
-            <button
-              onClick={handleToggleStatus}
-              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-            >
-              {status === 'ACTIVE' ? (
-                <>
-                  <EyeOff className="h-4 w-4 mr-3" />
-                  Deactivate
-                </>
-              ) : (
-                <>
-                  <Eye className="h-4 w-4 mr-3" />
-                  Activate
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => {
-                setShowDeleteModal(true);
-                setIsOpen(false);
-              }}
-              className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4 mr-3" />
-              Delete
-            </button>
-          </div>
-        )}
       </div>
+
+      {mounted && isOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+          }}
+        >
+          <Link
+            href={`/form-replies?id=${formId}`}
+            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            onClick={() => setIsOpen(false)}
+          >
+            <FileText className="h-4 w-4 mr-3" />
+            View Submissions
+          </Link>
+
+          <a
+            href={`${appUrl}/f/${identifierhash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            onClick={() => setIsOpen(false)}
+          >
+            <ExternalLink className="h-4 w-4 mr-3" />
+            Open Form
+          </a>
+
+          <Link
+            href={`/api-logs?id=${formId}`}
+            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            onClick={() => setIsOpen(false)}
+          >
+            <BarChart3 className="h-4 w-4 mr-3" />
+            API Logs
+          </Link>
+
+          <div className="border-t border-gray-200 my-1"></div>
+
+          <button
+            onClick={copyPublicUrl}
+            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          >
+            <Copy className="h-4 w-4 mr-3" />
+            Copy Link
+          </button>
+
+          <button
+            onClick={() => {
+              setShowEmbedModal(true);
+              setIsOpen(false);
+            }}
+            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          >
+            <Code className="h-4 w-4 mr-3" />
+            Embed Code
+          </button>
+
+          <Link
+            href={`/save-data-externally?id=${formId}`}
+            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            onClick={() => setIsOpen(false)}
+          >
+            <Webhook className="h-4 w-4 mr-3" />
+            External API
+          </Link>
+
+          <div className="border-t border-gray-200 my-1"></div>
+
+          <button
+            onClick={handleToggleStatus}
+            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          >
+            {status === 'ACTIVE' ? (
+              <>
+                <EyeOff className="h-4 w-4 mr-3" />
+                Deactivate
+              </>
+            ) : (
+              <>
+                <Eye className="h-4 w-4 mr-3" />
+                Activate
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              setShowDeleteModal(true);
+              setIsOpen(false);
+            }}
+            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4 mr-3" />
+            Delete
+          </button>
+        </div>,
+        document.body
+      )}
 
       <EmbedCodeModal
         isOpen={showEmbedModal}
