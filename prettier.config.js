@@ -5,6 +5,9 @@ module.exports = {
   printWidth: 100,
   tabWidth: 2,
   useTabs: false,
-  arrowParens: 'avoid',
+  arrowParens: 'always',
   endOfLine: 'lf',
+  bracketSpacing: true,
+  jsxSingleQuote: false,
+  proseWrap: 'preserve',
 };

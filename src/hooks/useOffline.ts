@@ -48,12 +48,26 @@ export function useOffline() {
     };
   }, []);
 
+  const syncNow = useCallback(async () => {
+    if (isSyncing || !isOnline) return;
+
+    setIsSyncing(true);
+    try {
+      const result = await offlineQueue.syncAll();
+      console.log('Sync complete:', result);
+    } catch (error) {
+      console.error('Sync failed:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [isSyncing, isOnline]);
+
   // Auto-sync when coming online
   useEffect(() => {
     if (isOnline && queueStats.pending > 0) {
       syncNow();
     }
-  }, [isOnline]);
+  }, [isOnline, queueStats.pending, syncNow]);
 
   // Listen for service worker messages
   useEffect(() => {
@@ -68,21 +82,7 @@ export function useOffline() {
     return () => {
       navigator.serviceWorker?.removeEventListener('message', handleMessage);
     };
-  }, []);
-
-  const syncNow = useCallback(async () => {
-    if (isSyncing || !isOnline) return;
-
-    setIsSyncing(true);
-    try {
-      const result = await offlineQueue.syncAll();
-      console.log('Sync complete:', result);
-    } catch (error) {
-      console.error('Sync failed:', error);
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isSyncing, isOnline]);
+  }, [syncNow]);
 
   const retryFailed = useCallback(async () => {
     setIsSyncing(true);
@@ -114,18 +114,18 @@ export function useFormCache(formHash: string) {
   const [isCached, setIsCached] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    checkCache();
-  }, [formHash]);
-
-  const checkCache = async () => {
+  const checkCache = useCallback(async () => {
     try {
       const cached = await offlineDB.getCachedForm(formHash);
       setIsCached(!!cached);
     } catch (error) {
       console.error('Error checking cache:', error);
     }
-  };
+  }, [formHash]);
+
+  useEffect(() => {
+    checkCache();
+  }, [checkCache]);
 
   const cacheForm = async (formData: any) => {
     setIsLoading(true);

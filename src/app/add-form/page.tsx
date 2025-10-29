@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
@@ -9,7 +9,7 @@ import Button from '@/components/ui/Button';
 import toast from 'react-hot-toast';
 import { Plus, Trash2 } from 'lucide-react';
 
-export default function AddFormPage() {
+function AddFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const formType = (searchParams.get('type') || 'form').toUpperCase();
@@ -365,5 +365,13 @@ export default function AddFormPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function AddFormPage() {
+  return (
+    <Suspense fallback={<div className="bg-gray-50 min-h-screen py-8 flex items-center justify-center">Loading...</div>}>
+      <AddFormContent />
+    </Suspense>
   );
 }

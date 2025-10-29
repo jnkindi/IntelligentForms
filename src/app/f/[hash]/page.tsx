@@ -109,6 +109,7 @@ export default function PublicFormPage() {
     }
 
     fetchForm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hash]);
 
   const handleChange = (fieldId: number, value: any) => {

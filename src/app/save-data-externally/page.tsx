@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 interface FormField {
@@ -31,7 +31,7 @@ interface ExternalApiData {
   }>;
 }
 
-export default function SaveDataExternallyPage() {
+function SaveDataExternallyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const formId = searchParams.get('id') ? parseInt(searchParams.get('id')!) : null;
@@ -80,7 +80,7 @@ export default function SaveDataExternallyPage() {
             });
           } else {
             // Initialize with empty mappings for each field
-            setApiData((prev) => ({
+            setApiData(prev => ({
               ...prev,
               fieldMappings: formData.data.fields.map((field: FormField) => ({
                 fieldId: field.id,
@@ -101,10 +101,8 @@ export default function SaveDataExternallyPage() {
   }, [formId, router]);
 
   const handleMappingChange = (fieldId: number, externalFieldName: string) => {
-    setApiData((prev) => {
-      const existingIndex = prev.fieldMappings.findIndex(
-        (m) => m.fieldId === fieldId
-      );
+    setApiData(prev => {
+      const existingIndex = prev.fieldMappings.findIndex(m => m.fieldId === fieldId);
 
       if (existingIndex >= 0) {
         const newMappings = [...prev.fieldMappings];
@@ -125,18 +123,42 @@ export default function SaveDataExternallyPage() {
 
     try {
       // Validate headers JSON
+      let headersString = apiData.headers.trim();
+      let parsed: any;
+
       try {
-        JSON.parse(apiData.headers);
-      } catch (e) {
-        toast.error('Invalid JSON format in headers');
+        // First, try to parse as-is
+        parsed = JSON.parse(headersString);
+      } catch (firstError) {
+        // If parsing fails, try to auto-fix common issues (single quotes to double quotes)
+        try {
+          const fixedJson = headersString.replace(/'/g, '"');
+          parsed = JSON.parse(fixedJson);
+          // If auto-fix worked, update the headers string
+          headersString = fixedJson;
+        } catch (secondError) {
+          // Both attempts failed, show error
+          const errorMessage = (secondError as Error).message || 'Invalid JSON format';
+          toast.error(
+            `Invalid JSON format in headers: ${errorMessage}. JSON requires double quotes for keys and string values. Example: {"accept": "json"}`
+          );
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      // Ensure it's an object
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        toast.error('Headers must be a JSON object (not an array). Example: {"accept": "json"}');
         setIsSaving(false);
         return;
       }
 
+      // Update with valid JSON string (normalized)
+      apiData.headers = JSON.stringify(parsed);
+
       // Filter out empty mappings
-      const validMappings = apiData.fieldMappings.filter(
-        (m) => m.externalFieldName.trim() !== ''
-      );
+      const validMappings = apiData.fieldMappings.filter(m => m.externalFieldName.trim() !== '');
 
       if (validMappings.length === 0) {
         toast.error('Please map at least one field');
@@ -195,9 +217,7 @@ export default function SaveDataExternallyPage() {
               Back to Forms
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            External API Integration
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">External API Integration</h1>
           <p className="text-gray-600">
             Configure webhook to send form submissions to an external API
           </p>
@@ -214,21 +234,17 @@ export default function SaveDataExternallyPage() {
                 label="API URL"
                 type="url"
                 value={apiData.url}
-                onChange={(e) =>
-                  setApiData((prev) => ({ ...prev, url: e.target.value }))
-                }
+                onChange={e => setApiData(prev => ({ ...prev, url: e.target.value }))}
                 required
                 placeholder="https://api.example.com/webhook"
               />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  HTTP Method
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">HTTP Method</label>
                 <select
                   value={apiData.method}
-                  onChange={(e) =>
-                    setApiData((prev) => ({
+                  onChange={e =>
+                    setApiData(prev => ({
                       ...prev,
                       method: e.target.value as any,
                     }))
@@ -248,15 +264,13 @@ export default function SaveDataExternallyPage() {
                 </label>
                 <textarea
                   value={apiData.headers}
-                  onChange={(e) =>
-                    setApiData((prev) => ({ ...prev, headers: e.target.value }))
-                  }
+                  onChange={e => setApiData(prev => ({ ...prev, headers: e.target.value }))}
                   rows={4}
                   placeholder='{"Authorization": "Bearer token", "X-Custom-Header": "value"}'
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 font-mono text-sm"
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  Add custom HTTP headers as JSON. Leave as {"{}"} if no custom headers needed.
+                  Add custom HTTP headers as JSON. Leave as {'{}'} if no custom headers needed.
                 </p>
               </div>
 
@@ -265,9 +279,7 @@ export default function SaveDataExternallyPage() {
                   type="checkbox"
                   id="enabled"
                   checked={apiData.enabled}
-                  onChange={(e) =>
-                    setApiData((prev) => ({ ...prev, enabled: e.target.checked }))
-                  }
+                  onChange={e => setApiData(prev => ({ ...prev, enabled: e.target.checked }))}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <label htmlFor="enabled" className="ml-2 block text-sm text-gray-700">
@@ -286,10 +298,8 @@ export default function SaveDataExternallyPage() {
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              {form.fields.map((field) => {
-                const mapping = apiData.fieldMappings.find(
-                  (m) => m.fieldId === field.id
-                );
+              {form.fields.map(field => {
+                const mapping = apiData.fieldMappings.find(m => m.fieldId === field.id);
                 return (
                   <div key={field.id} className="grid grid-cols-2 gap-4">
                     <div>
@@ -306,9 +316,7 @@ export default function SaveDataExternallyPage() {
                     <Input
                       label="External Field Name"
                       value={mapping?.externalFieldName || ''}
-                      onChange={(e) =>
-                        handleMappingChange(field.id, e.target.value)
-                      }
+                      onChange={e => handleMappingChange(field.id, e.target.value)}
                       placeholder="e.g., email_address"
                     />
                   </div>
@@ -320,11 +328,12 @@ export default function SaveDataExternallyPage() {
           {/* Information */}
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-6">
-              <h3 className="text-sm font-semibold text-blue-900 mb-2">
-                How it works
-              </h3>
+              <h3 className="text-sm font-semibold text-blue-900 mb-2">How it works</h3>
               <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-                <li>When a user submits your form, the data will be automatically sent to your external API</li>
+                <li>
+                  When a user submits your form, the data will be automatically sent to your
+                  external API
+                </li>
                 <li>Only fields with mapped external names will be included in the request</li>
                 <li>The data is sent as JSON in the request body</li>
                 <li>Form submissions are saved even if the external API fails</li>
@@ -334,11 +343,7 @@ export default function SaveDataExternallyPage() {
 
           {/* Submit */}
           <div className="flex justify-end space-x-4">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => router.back()}
-            >
+            <Button type="button" variant="ghost" onClick={() => router.back()}>
               Cancel
             </Button>
             <Button type="submit" variant="primary" size="lg" isLoading={isSaving}>
@@ -348,5 +353,23 @@ export default function SaveDataExternallyPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function SaveDataExternallyPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-gray-50 min-h-screen py-8">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center py-12">
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <SaveDataExternallyContent />
+    </Suspense>
   );
 }

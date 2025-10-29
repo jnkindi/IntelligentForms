@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -47,20 +47,7 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<number | null>(null);
 
-  useEffect(() => {
-    // Check if user is ADMIN or MANAGER
-    if (
-      session?.user?.role !== 'ADMIN' &&
-      session?.user?.role !== 'MANAGER'
-    ) {
-      router.push('/dashboard');
-      return;
-    }
-
-    fetchUsers();
-  }, [session, includeInactive]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(
@@ -79,7 +66,20 @@ export default function UsersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [includeInactive]);
+
+  useEffect(() => {
+    // Check if user is ADMIN or MANAGER
+    if (
+      session?.user?.role !== 'ADMIN' &&
+      session?.user?.role !== 'MANAGER'
+    ) {
+      router.push('/dashboard');
+      return;
+    }
+
+    fetchUsers();
+  }, [session, router, fetchUsers]);
 
   const handleDeleteUser = async (userId: number) => {
     if (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
@@ -31,11 +31,7 @@ export default function SetupPage() {
     confirmPassword: '',
   });
 
-  useEffect(() => {
-    checkSetupStatus();
-  }, []);
-
-  const checkSetupStatus = async () => {
+  const checkSetupStatus = useCallback(async () => {
     try {
       const response = await fetch('/api/organization/setup');
       const data = await response.json();
@@ -50,7 +46,11 @@ export default function SetupPage() {
     } finally {
       setIsChecking(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkSetupStatus();
+  }, [checkSetupStatus]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
