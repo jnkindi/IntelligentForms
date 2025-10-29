@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -19,7 +19,30 @@ export default function SignupPage() {
     confirmPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingSetup, setIsCheckingSetup] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    // Check if organization setup is completed
+    const checkSetup = async () => {
+      try {
+        const response = await fetch('/api/organization/setup');
+        const data = await response.json();
+
+        if (!data.data?.setupCompleted) {
+          // Redirect to setup if not completed
+          router.push('/setup');
+          return;
+        }
+      } catch (error) {
+        console.error('Setup check error:', error);
+      } finally {
+        setIsCheckingSetup(false);
+      }
+    };
+
+    checkSetup();
+  }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -76,6 +99,17 @@ export default function SignupPage() {
       setIsLoading(false);
     }
   };
+
+  if (isCheckingSetup) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
