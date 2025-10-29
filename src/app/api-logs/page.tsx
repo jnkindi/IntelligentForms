@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -29,7 +29,7 @@ interface ExternalApiInfo {
   enabled: boolean;
 }
 
-export default function ApiLogsPage() {
+function ApiLogsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const formId = searchParams.get('id') ? parseInt(searchParams.get('id')!) : null;
@@ -39,7 +39,7 @@ export default function ApiLogsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedLog, setSelectedLog] = useState<ApiLog | null>(null);
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     if (!formId) {
       router.push('/manage-forms');
       return;
@@ -62,11 +62,11 @@ export default function ApiLogsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [formId, router]);
 
   useEffect(() => {
     fetchLogs();
-  }, [formId]);
+  }, [fetchLogs]);
 
   const getStatusColor = (status: number | null) => {
     if (status === null || status === 0) return 'text-gray-500';
@@ -360,5 +360,21 @@ export default function ApiLogsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ApiLogsPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-gray-50 min-h-screen py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-12">
+            <p className="text-gray-600">Loading logs...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <ApiLogsContent />
+    </Suspense>
   );
 }

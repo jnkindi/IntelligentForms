@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -26,17 +26,7 @@ export default function OrganizationSettingsPage() {
     address: '',
   });
 
-  useEffect(() => {
-    // Check if user is ADMIN
-    if (session?.user?.role !== 'ADMIN') {
-      router.push('/dashboard');
-      return;
-    }
-
-    fetchOrganization();
-  }, [session]);
-
-  const fetchOrganization = async () => {
+  const fetchOrganization = useCallback(async () => {
     try {
       setIsFetching(true);
       const response = await fetch('/api/organization');
@@ -62,7 +52,17 @@ export default function OrganizationSettingsPage() {
     } finally {
       setIsFetching(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Check if user is ADMIN
+    if (session?.user?.role !== 'ADMIN') {
+      router.push('/dashboard');
+      return;
+    }
+
+    fetchOrganization();
+  }, [session, router, fetchOrganization]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
